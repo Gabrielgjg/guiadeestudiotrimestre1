@@ -78,6 +78,17 @@ table.red td:nth-child(2){text-align:center;font-weight:700;width:24px}
 .temas .t{margin:8px 0}
 .temas .t .barra-t{height:14px;background:#e9e2d0;border-radius:7px;overflow:hidden;margin-top:3px}
 .temas .t .barra-t i{display:block;height:100%}
+.rec{display:flex;gap:12px;align-items:flex-start;background:#fff;border:2px solid var(--tinta);border-radius:8px;padding:12px;margin-bottom:10px}
+.rec.prioridad{border-width:3px;border-color:var(--rosa);background:#fff4f9}
+.rec .ico{font-size:2rem;line-height:1;flex:0 0 auto}
+.rec .cuerpo{flex:1}
+.rec .por{font-size:.88rem;margin:2px 0 8px}
+.rec .btn{font-size:.92rem;min-height:44px;padding:.45em .9em;box-shadow:3px 3px 0 var(--tinta);text-decoration:none;display:inline-block}
+.subt{font-weight:700;margin:14px 0 8px}
+.lect h4{font-family:var(--display);font-weight:400;font-size:1.05rem;margin:12px 0 6px}
+.lect table{width:100%;border-collapse:collapse;font-size:.9rem;margin:8px 0}
+.lect th,.lect td{border:1px solid rgba(0,0,0,.2);padding:5px 6px;text-align:left;vertical-align:top}
+.lect th{background:#f1ead8}
 .repaso{border-left:6px solid var(--rojo);background:#fff;border-radius:0 6px 6px 0;padding:8px 10px;margin-bottom:8px;font-size:.95rem}
 .modal{position:fixed;inset:0;background:rgba(10,14,40,.8);display:none;align-items:center;justify-content:center;z-index:100;padding:16px}
 .modal.abierto{display:flex}
@@ -135,6 +146,10 @@ table.red td:nth-child(2){text-align:center;font-weight:700;width:24px}
     <h3 style="margin-top:12px">Por tema</h3>
     <div class="temas" id="f-temas"></div>
     <p id="f-consejo"></p>
+  </div>
+  <div class="hoja no-imprimir" id="caja-ruta">
+    <h3>Tu ruta de repaso</h3>
+    <div id="f-ruta"></div>
   </div>
   <div class="hoja">
     <h3>Para repasar</h3>
@@ -426,6 +441,7 @@ function final(){
   $('#f-aciertos').textContent=`${aciertos()} de ${PREG.length} respuestas correctas · tiempo: ${mmss(E.seg)}`;
   $('#f-temas').innerHTML=Object.keys(TEMAS).map(k=>{const p=t[k].n?t[k].ok/t[k].n:0,col=p>=.8?'#2f8f4e':p>=.6?'#c98a00':'#c3241c';
     return `<div class="t"><div style="display:flex;justify-content:space-between;gap:8px"><span>${TEMAS[k]}</span><b>${t[k].ok} de ${t[k].n}</b></div><div class="barra-t"><i style="width:${p*100}%;background:${col}"></i></div></div>`}).join('');
+  pintarRuta(t);
   const debil=Object.keys(TEMAS).filter(k=>t[k].n&&t[k].ok/t[k].n<.6);
   $('#f-consejo').innerHTML=debil.length?`💡 Te conviene repasar: <b>${debil.map(k=>TEMAS[k].toLowerCase()).join(', ')}</b>.`:'💡 ¡Buen dominio de todos los temas!';
   const mal=PREG.map((q,i)=>i).filter(i=>E.resp[i]!==correcta(i));
@@ -435,6 +451,57 @@ function final(){
   const url=urlRegistro();$('#b-enviar').disabled=!url||E.enviado;
   $('#msg-env').className='msg';$('#msg-env').textContent=!url?'El envío al profesor no está activado.':E.enviado?'Tu evaluación ya fue enviada.':'';
 }
+/* ---------- Ruta de repaso ---------- */
+const JUEGOS={
+ vivo:{n:'¿Está vivo? Laboratorio BioScan',e:'🔬',url:'https://gabrielgjg.github.io/estavivo/',d:'Escanea especímenes con 7 sensores y decide qué está vivo y qué no.'},
+ quien:{n:'¿Quién se come a quién?',e:'🃏',url:'https://gabrielgjg.github.io/quien-se-come-a-quien-/',d:'Adivina el ser vivo escondido y descubre su nivel trófico.'},
+ domino:{n:'Efecto dominó',e:'🕸️',url:'https://gabrielgjg.github.io/efecto-domino/',d:'Quita o agrega seres vivos en una red trófica y mira el efecto en cadena.'}
+};
+const LECTURAS={
+ concepto:{t:'¿Qué es la biología?',html:`<div class="lect">
+  <p>La palabra <b>biología</b> se forma con dos raíces griegas: <b>bíos</b>, que significa «vida», y <b>lógos</b>, que significa «estudio» o «tratado». Biología es, literalmente, <b>el estudio de la vida</b>.</p>
+  <h4>¿Qué estudia?</h4>
+  <p>A todos los seres vivos, no solo a los animales: plantas, hongos, bacterias y personas. Le interesa cómo están formados, cómo funcionan, cómo se relacionan entre sí y con su ambiente, cómo heredan sus características y cómo han cambiado con el tiempo.</p>
+  <h4>Las raíces te ayudan a descifrar palabras</h4>
+  <p>Si conoces las raíces, puedes adivinar el significado de muchas palabras: <b>biodiversidad</b> es la variedad de la vida; <b>biografía</b> (con <i>graphein</i>, escribir) es un escrito sobre la vida de alguien; un <b>antibiótico</b> (con <i>anti</i>, contra) es una sustancia que actúa contra la vida de las bacterias.</p>
+  <h4>Cuidado con confundirla</h4>
+  <p>La <b>geología</b> (<i>geo</i>, Tierra) estudia las rocas y el planeta; la física y la química estudian la materia y la energía. Todas son ciencias, pero solo la biología tiene a la vida como centro.</p></div>`},
+ ramas:{t:'Las ramas de la biología',html:`<div class="lect">
+  <p>La biología es tan grande que se divide en <b>ramas</b>. Casi todas se nombran igual: una raíz griega que dice <b>qué</b> se estudia, más <b>-logía</b> o una terminación parecida.</p>
+  <table><tr><th>Rama</th><th>Raíz</th><th>Estudia</th></tr>
+  <tr><td>Botánica</td><td><i>botánē</i>: planta</td><td>Las plantas</td></tr>
+  <tr><td>Zoología</td><td><i>zôon</i>: animal</td><td>Los animales</td></tr>
+  <tr><td>Microbiología</td><td><i>micro</i>: pequeño</td><td>Los seres vivos microscópicos, como las bacterias</td></tr>
+  <tr><td>Micología</td><td><i>mýkēs</i>: hongo</td><td>Los hongos</td></tr>
+  <tr><td>Citología</td><td><i>kýtos</i>: célula</td><td>Las células</td></tr>
+  <tr><td>Genética</td><td><i>génos</i>: origen</td><td>La herencia: cómo pasan las características de padres a hijos</td></tr>
+  <tr><td>Anatomía</td><td><i>anatomē</i>: cortar, disecar</td><td>La estructura del cuerpo: cómo está formado</td></tr>
+  <tr><td>Fisiología</td><td><i>phýsis</i>: naturaleza</td><td>El funcionamiento del cuerpo: cómo trabaja</td></tr>
+  <tr><td>Ecología</td><td><i>oîkos</i>: casa</td><td>Las relaciones de los seres vivos entre sí y con su ambiente</td></tr>
+  <tr><td>Paleontología</td><td><i>palaiós</i>: antiguo</td><td>Los seres vivos del pasado, a través de los fósiles</td></tr></table>
+  <h4>Las parejas que más se confunden</h4>
+  <p><b>Anatomía y fisiología:</b> la anatomía responde «¿cómo está formado?» (los huesos, los músculos); la fisiología responde «¿cómo funciona?» (cómo late el corazón).</p>
+  <p><b>Zoología y ecología:</b> si alguien estudia un animal en sí, es zoología; si estudia cómo se relaciona con otros seres y con su ambiente, es ecología.</p>
+  <p><b>Microbiología y citología:</b> la microbiología estudia organismos microscópicos completos; la citología estudia las células de cualquier ser vivo, también las tuyas.</p></div>`}
+};
+const RUTA={concepto:[{tipo:'lectura',id:'concepto'}],ramas:[{tipo:'lectura',id:'ramas'}],caracteristicas:[{tipo:'juego',id:'vivo'}],redes:[{tipo:'juego',id:'quien'},{tipo:'juego',id:'domino'}]};
+function tarjeta(r,tema,t,prio){
+  const por=`En «${TEMAS[tema].toLowerCase()}» tuviste ${t.ok} de ${t.n}.`;
+  if(r.tipo==='juego'){const J=JUEGOS[r.id];return `<div class="rec${prio?' prioridad':''}"><span class="ico">${J.e}</span><div class="cuerpo"><b>${esc(J.n)}</b><p class="por">${prio?esc(por)+' ':''}${esc(J.d)}</p>
+    <a class="btn" href="${J.url}" target="_blank" rel="noopener">Jugar ↗</a></div></div>`}
+  const L=LECTURAS[r.id];return `<div class="rec${prio?' prioridad':''}"><span class="ico">📖</span><div class="cuerpo"><b>${esc(L.t)}</b><p class="por">${prio?esc(por)+' ':''}Una lectura corta para repasar este tema.</p>
+    <button class="btn" data-lect="${r.id}">Leer</button></div></div>`;
+}
+function pintarRuta(t){
+  const orden=Object.keys(TEMAS).sort((a,b)=>t[a].ok/t[a].n-t[b].ok/t[b].n);
+  const debiles=orden.filter(k=>t[k].ok/t[k].n<.7),resto=orden.filter(k=>!debiles.includes(k));
+  let h='';
+  if(debiles.length){h+=`<p class="subt">⭐ Te recomendamos empezar por aquí</p>`+debiles.map(k=>RUTA[k].map(r=>tarjeta(r,k,t[k],true)).join('')).join('')}
+  else h+=`<p>🎉 Dominaste todos los temas. Si quieres seguir practicando, aquí están los juegos y lecturas.</p>`;
+  if(resto.length)h+=`<p class="subt">${debiles.length?'Para seguir practicando':'Juegos y lecturas'}</p>`+resto.map(k=>RUTA[k].map(r=>tarjeta(r,k,t[k],false)).join('')).join('');
+  $('#f-ruta').innerHTML=h+'<p class="muted" style="margin:6px 0 0">Los juegos se abren en otra pestaña: tu resultado se queda aquí.</p>';
+}
+$('#f-ruta').addEventListener('click',e=>{const b=e.target.closest('[data-lect]');if(!b)return;const L=LECTURAS[b.dataset.lect];modal(`<h3>📖 ${esc(L.t)}</h3>${L.html}`)});
 function urlRegistro(){const u=ls.get('eval-url','')||CONFIG.urlAppsScript||'';return u.indexOf('__URL__')>=0?'':u}
 $('#b-enviar').addEventListener('click',async()=>{
   const url=urlRegistro();if(!url||E.enviado)return;const b=$('#b-enviar');b.disabled=true;$('#msg-env').textContent='Enviando…';
