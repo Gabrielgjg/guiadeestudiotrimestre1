@@ -1,0 +1,464 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Evaluación: La vida y sus redes</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Alfa+Slab+One&family=Atkinson+Hyperlegible:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --anil:#22307b; --anil-2:#18225c; --papel:#fff8ea; --tinta:#1c1a17;
+  --rosa:#d1006c; --cempa:#f2a900; --verde:#2f8f4e; --rojo:#c3241c;
+  --display:'Alfa Slab One', Rockwell, Georgia, serif;
+  --texto:'Atkinson Hyperlegible', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--anil);color:var(--papel);font-family:var(--texto);font-size:17px;line-height:1.55;min-height:100vh;
+  padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+.picado{height:28px;background:conic-gradient(from -45deg at 50% 100%, var(--rosa) 90deg, transparent 0) 0 0/34px 100%,
+  linear-gradient(var(--cempa),var(--cempa)) 0 0/100% 6px no-repeat}
+main{max-width:780px;margin:0 auto;padding:14px 14px 48px}
+.pantalla{display:none}.pantalla.activa{display:block}
+h1,h2,h3{font-family:var(--display);font-weight:400;line-height:1.12;margin:0 0 .4em}
+h1{font-size:clamp(2rem,7vw,3.1rem)} h2{font-size:clamp(1.3rem,5vw,1.8rem)} h3{font-size:1.1rem}
+p{margin:0 0 .75em}
+button,input,select{font:inherit;color:inherit}
+:focus-visible{outline:3px solid var(--cempa);outline-offset:3px}
+.btn{font-family:var(--display);font-size:1rem;background:var(--cempa);color:var(--tinta);border:3px solid var(--tinta);border-radius:6px;
+  padding:.6em 1.1em;min-height:48px;box-shadow:4px 4px 0 var(--tinta);cursor:pointer;touch-action:manipulation}
+.btn:active{transform:translate(3px,3px);box-shadow:1px 1px 0 var(--tinta)}
+.btn.sec{background:var(--papel)} .btn.ancho{width:100%}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.hoja{background:var(--papel);color:var(--tinta);border:3px solid var(--tinta);border-radius:8px;padding:16px}
+.hoja+.hoja{margin-top:14px}
+.muted{opacity:.75;font-size:.92rem}
+.fila{display:flex;gap:10px;flex-wrap:wrap}.fila>*{flex:1 1 130px}
+.campo{display:flex;flex-direction:column;gap:4px;font-weight:700;margin-bottom:10px}
+.campo input,.campo select{padding:11px 12px;border:2px solid var(--tinta);border-radius:6px;background:#fff;color:var(--tinta);min-height:48px;width:100%}
+.msg{min-height:1.3em;font-weight:700;margin:6px 0 0}
+.msg.mal{color:var(--rojo)} .msg.bien{color:var(--verde)}
+.oculto{display:none!important}
+.reglas li{margin-bottom:6px}
+/* Barra */
+.barra{position:sticky;top:0;z-index:20;background:var(--anil-2);border-bottom:3px solid var(--cempa);margin:0 -14px 14px;padding:8px 14px}
+.barra .in{display:flex;align-items:center;gap:10px;max-width:780px;margin:0 auto;font-weight:700;font-size:.9rem}
+.progreso{flex:1;height:12px;border:2px solid var(--papel);border-radius:6px;overflow:hidden;background:#05081c}
+.progreso i{display:block;height:100%;background:var(--cempa);transition:width .3s}
+/* Caso */
+.caso-cab{display:flex;gap:10px;align-items:center;margin-bottom:6px}
+.caso-cab .e{font-size:2rem}
+details.lectura{background:#fff;border:2px solid var(--tinta);border-radius:8px;padding:0 14px;margin:8px 0 14px}
+details.lectura summary{cursor:pointer;font-weight:700;padding:12px 0;min-height:44px}
+details.lectura[open] summary{border-bottom:1px dashed rgba(0,0,0,.3);margin-bottom:10px}
+details.lectura ul{padding-left:20px}
+details.lectura li{margin-bottom:6px}
+table.red{width:100%;border-collapse:collapse;margin:8px 0 12px;font-size:.92rem}
+table.red caption{text-align:left;font-weight:700;margin-bottom:4px;font-size:.88rem}
+table.red td{border:1px solid rgba(0,0,0,.2);padding:5px 6px;vertical-align:top}
+table.red td:nth-child(2){text-align:center;font-weight:700;width:24px}
+.tema{display:inline-block;font-size:.78rem;font-weight:700;border-radius:999px;padding:2px 10px;background:var(--anil);color:#fff}
+.preg{font-size:1.12rem;font-weight:700;margin:10px 0 12px}
+.op{display:flex;gap:10px;align-items:flex-start;width:100%;text-align:left;border:2px solid var(--tinta);background:#fff;border-radius:8px;padding:12px;margin-bottom:8px;cursor:pointer;min-height:52px;color:var(--tinta);touch-action:manipulation;font-size:1rem}
+.op .letra{flex:0 0 28px;height:28px;border-radius:50%;border:2px solid var(--tinta);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.9rem}
+.op[aria-pressed=true]{background:#fff1c7}
+.op[aria-pressed=true] .letra{background:var(--tinta);color:var(--papel)}
+.op.correcta{background:#e2f4e8;border-color:var(--verde);border-width:3px}
+.op.incorrecta{background:#fbe3e0;border-color:var(--rojo);border-width:3px}
+.op:disabled{cursor:default;opacity:1}
+.op .expl{display:block;font-size:.92rem;margin-top:6px}
+.op .marca{font-weight:700}
+.veredicto{border-radius:8px;padding:10px 12px;margin:6px 0 12px;font-weight:700}
+.veredicto.ok{background:#e2f4e8;border:2px solid var(--verde);color:#1d5c33}
+.veredicto.no{background:#fbe3e0;border:2px solid var(--rojo);color:#8a1a14}
+/* Final */
+.calif{font-family:var(--display);font-size:clamp(3.4rem,14vw,5rem);line-height:1;color:var(--cempa)}
+.temas .t{margin:8px 0}
+.temas .t .barra-t{height:14px;background:#e9e2d0;border-radius:7px;overflow:hidden;margin-top:3px}
+.temas .t .barra-t i{display:block;height:100%}
+.repaso{border-left:6px solid var(--rojo);background:#fff;border-radius:0 6px 6px 0;padding:8px 10px;margin-bottom:8px;font-size:.95rem}
+.modal{position:fixed;inset:0;background:rgba(10,14,40,.8);display:none;align-items:center;justify-content:center;z-index:100;padding:16px}
+.modal.abierto{display:flex}
+.modal .hoja{max-width:520px;width:100%;max-height:88vh;overflow:auto}
+@media print{
+  @page{margin:12mm}
+  body{background:#fff!important;color:#000;font-size:11pt}
+  body>*:not(main){display:none!important}
+  main>*:not(#p-final){display:none!important}
+  .no-imprimir{display:none!important}
+  .hoja{border:1px solid #888}
+  *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<div class="picado" aria-hidden="true"></div>
+<main>
+
+<section id="p-inicio" class="pantalla activa">
+  <h1>La vida y sus redes</h1>
+  <p>Evaluación de Biología: concepto y ramas de la biología, características de los seres vivos, niveles tróficos y redes.</p>
+  <div class="hoja">
+    <h3>Antes de empezar</h3>
+    <ul class="reglas">
+      <li>Son <b>30 preguntas</b> organizadas en <b>6 casos</b>. Cada caso tiene una lectura; léela con calma antes de responder.</li>
+      <li>Puedes volver a abrir la lectura en cualquier pregunta del caso.</li>
+      <li>Al elegir una respuesta verás si es correcta y <b>por qué</b>. Ya no podrás cambiarla, así que piensa antes de tocar.</li>
+      <li>No hay límite de tiempo.</li>
+    </ul>
+    <div class="campo"><label for="i-nombre">Nombre y apellido</label><input id="i-nombre" maxlength="40" autocomplete="off"></div>
+    <div class="campo"><label for="i-sec">Secundaria</label><input id="i-sec" maxlength="60" autocomplete="off" placeholder="Ej. Secundaria Técnica 45"></div>
+    <div class="fila">
+      <div class="campo"><label for="i-grado">Grado</label><select id="i-grado"><option>1°</option><option>2°</option><option>3°</option></select></div>
+      <div class="campo"><label for="i-letra">Grupo</label><select id="i-letra"><option>A</option><option>B</option><option>C</option><option>D</option><option>E</option><option>F</option><option>G</option><option>H</option><option>I</option><option>J</option></select></div>
+    </div>
+    <p class="msg mal" id="msg-ini" role="status"></p>
+    <button class="btn ancho" id="b-empezar">Comenzar la evaluación</button>
+    <button class="btn sec ancho oculto" id="b-continuar" style="margin-top:10px">Continuar mi evaluación</button>
+  </div>
+</section>
+
+<section id="p-eval" class="pantalla">
+  <div class="barra"><div class="in"><span id="b-num">1 / 30</span><div class="progreso"><i id="b-prog"></i></div><span id="b-ok">✔ 0</span></div></div>
+  <div class="hoja" id="pregunta"></div>
+</section>
+
+<section id="p-final" class="pantalla">
+  <div class="hoja">
+    <h2>Resultado</h2>
+    <p id="f-datos"></p>
+    <div class="calif" id="f-calif">0</div>
+    <p id="f-aciertos" style="font-weight:700"></p>
+    <h3 style="margin-top:12px">Por tema</h3>
+    <div class="temas" id="f-temas"></div>
+    <p id="f-consejo"></p>
+  </div>
+  <div class="hoja">
+    <h3>Para repasar</h3>
+    <div id="f-repaso"></div>
+  </div>
+  <div class="hoja no-imprimir">
+    <div class="fila"><button class="btn" id="b-enviar">Enviar a mi profesor</button><button class="btn sec" id="b-imprimir">Imprimir o guardar PDF</button></div>
+    <p class="msg" id="msg-env" role="status"></p>
+  </div>
+</section>
+</main>
+
+<div class="modal" id="modal" role="dialog" aria-modal="true"><div class="hoja" id="modal-doc"></div></div>
+
+<script>
+const TEMAS={concepto:'Concepto de biología',ramas:'Ramas de la biología',caracteristicas:'Características de los seres vivos',redes:'Niveles tróficos y redes'};
+const CASOS={
+c1:{t:'Una palabra con historia',e:'📜',tema:'concepto',lectura:`<p>La palabra <b>biología</b> viene del griego antiguo y está formada por dos raíces: <b>bíos</b>, que significa «vida», y <b>lógos</b>, que significa «estudio», «tratado» o «conocimiento».</p>
+<p>Por eso, la biología es la ciencia que estudia a los seres vivos: cómo están formados, cómo funcionan, cómo se relacionan entre sí y con su ambiente, y cómo han cambiado a lo largo del tiempo.</p>
+<p>Aunque las personas han observado a los seres vivos desde hace miles de años, la palabra «biología» empezó a usarse con este significado a principios del siglo XIX, gracias a naturalistas como Jean-Baptiste Lamarck.</p>
+<p>Muchas palabras científicas se forman de la misma manera. Por ejemplo, <b>geología</b> une <i>geo</i> (Tierra) y <i>lógos</i>, y <b>microscopio</b> une <i>micro</i> (pequeño) y <i>skopein</i> (observar).</p>`},
+c2:{t:'El equipo de la reserva',e:'🔭',tema:'ramas',lectura:`<p>En la reserva de Marismas Nacionales, en Nayarit, trabaja un equipo de biólogos. Cada uno se especializa en una rama de la biología:</p>
+<ul><li><b>Lucía</b> estudia los mangles y otras plantas: cómo crecen, cómo se clasifican y cómo hacen la fotosíntesis.</li>
+<li><b>Raúl</b> toma muestras de agua y las observa al microscopio para identificar bacterias y otros organismos diminutos.</li>
+<li><b>Sofía</b> investiga cómo se relacionan los peces, las aves y los mangles entre sí, y qué les pasa cuando se contamina el agua.</li>
+<li><b>Diego</b> analiza el ADN de los cocodrilos para saber cómo heredan sus características de padres a hijos.</li>
+<li><b>Marta</b> estudia los huesos, músculos y órganos de las garzas: cómo están formados y cómo funcionan.</li></ul>`},
+c3:{t:'El ajolote de Xochimilco',e:'🦎',tema:'caracteristicas',lectura:`<p>El ajolote (<i>Ambystoma mexicanum</i>) vive solo en los canales de Xochimilco, en la Ciudad de México. Su cuerpo está formado por millones de células.</p>
+<p>Se alimenta de gusanos, larvas de insectos y acociles, que atrapa abriendo la boca de golpe. Sus células usan el oxígeno que obtiene del agua, a través de sus branquias y de su piel, para liberar la energía de los alimentos.</p>
+<p>Nace de un huevo de unos milímetros y puede llegar a medir más de 20 centímetros. Detecta las vibraciones del agua y se esconde en el fondo cuando algo se acerca. Las hembras ponen cientos de huevos.</p>
+<p>A lo largo de muchas generaciones, la especie se adaptó a vivir toda su vida en el agua fría de los lagos. Por eso hoy, con el agua más caliente y contaminada, está en peligro de extinción.</p>`},
+c4:{t:'Expedientes del Laboratorio BioScan',e:'🔬',tema:'caracteristicas',lectura:`<p>Al laboratorio llegaron cuatro especímenes:</p>
+<ul><li>🔥 <b>Fuego:</b> consume oxígeno, produce dióxido de carbono y se agranda si tiene combustible. Una chispa puede encender otro fuego.</li>
+<li>🐴 <b>Mula:</b> nació de la cruza de un burro y una yegua. Come, respira, creció y responde a los sonidos, pero no puede tener crías.</li>
+<li>🫘 <b>Semilla de frijol guardada:</b> lleva un año sin cambios. Dentro tiene un embrión formado por células. Si recibe agua, germina.</li>
+<li>🦠 <b>Virus de la influenza:</b> no tiene células; es material genético dentro de una cubierta de proteínas. Solo puede multiplicarse dentro de una célula viva. Cambia tanto que cada año se actualiza la vacuna.</li></ul>`},
+c5:{t:'La red del pastizal',e:'🌾',tema:'redes',lectura:`<p>En los pastizales de Janos, Chihuahua, el pasto navajita y otras hierbas crecen con la luz del Sol. De ellas se alimentan los perritos de la pradera, los bisontes y los chapulines. Los tecolotes llaneros comen chapulines.</p>
+<p>El hurón de patas negras se alimenta casi solo de perritos de la pradera, que también son presa de la serpiente toro, del coyote y del águila real. El águila real también caza serpientes. Ningún animal del pastizal caza a un águila real o a un coyote adultos.</p>
+<p>Cuando un animal muere, hongos y bacterias descomponen su cuerpo y devuelven nutrientes al suelo.</p>
+<table class="red"><caption>¿Hacia dónde va la energía? (la flecha apunta a quien come)</caption>
+<tr><td>🌾 Pasto</td><td>→</td><td>🐿️ Perrito de la pradera, 🦬 Bisonte, 🦗 Chapulín</td></tr>
+<tr><td>🦗 Chapulín</td><td>→</td><td>🦉 Tecolote llanero</td></tr>
+<tr><td>🐿️ Perrito de la pradera</td><td>→</td><td>🦡 Hurón, 🐍 Serpiente toro, 🐺 Coyote, 🦅 Águila real</td></tr>
+<tr><td>🐍 Serpiente toro</td><td>→</td><td>🦅 Águila real</td></tr></table>`},
+c6:{t:'¿Por qué hay pocas águilas?',e:'⚡',tema:'redes',lectura:`<p>Imagina que el pasto de una parte del pastizal captura <b>10,000 unidades de energía</b> de la luz del Sol.</p>
+<p>Cuando los perritos de la pradera comen ese pasto, solo alrededor del <b>10%</b> de esa energía se convierte en su cuerpo. El resto lo usan para vivir (moverse, respirar, mantener su temperatura) o se pierde como calor.</p>
+<p>Lo mismo ocurre en cada paso de la red: el hurón que come perritos solo aprovecha cerca del 10% de la energía que había en ellos.</p>`}
+};
+/* Cada pregunta: caso, enunciado y opciones [texto, ¿correcta?, explicación] */
+const PREG=[
+{c:'c1',p:'Según la lectura, ¿qué significa la raíz griega «bíos»?',o:[
+ ['Vida',1,'Correcto: bíos significa «vida». Por eso aparece en palabras como biología o biodiversidad.'],
+ ['Estudio',0,'«Estudio» es el significado de lógos, la otra raíz de la palabra.'],
+ ['Tierra',0,'«Tierra» se dice geo, como en geología.'],
+ ['Pequeño',0,'«Pequeño» se dice micro, como en microscopio.']]},
+{c:'c1',p:'¿Qué significa la raíz «lógos»?',o:[
+ ['Estudio, tratado o conocimiento',1,'Correcto: lógos significa estudio o tratado. Biología es, literalmente, «el estudio de la vida».'],
+ ['Vida',0,'«Vida» es el significado de bíos, la primera raíz.'],
+ ['Observar',0,'«Observar» es skopein, la raíz que aparece en microscopio.'],
+ ['Animal',0,'«Animal» se dice zôon, de donde viene zoología.']]},
+{c:'c1',p:'¿Cuál es la mejor definición de biología?',o:[
+ ['La ciencia que estudia a los seres vivos y los fenómenos de la vida',1,'Correcto: une bíos (vida) y lógos (estudio), y abarca a todos los seres vivos.'],
+ ['La ciencia que estudia a los animales y cómo se relacionan con su ambiente',0,'Eso sería la zoología, una de sus ramas. La biología estudia a todos los seres vivos: también plantas, hongos y microorganismos.'],
+ ['La ciencia que estudia la Tierra y sus rocas',0,'Esa es la geología (geo = Tierra). No estudia seres vivos.'],
+ ['La ciencia que estudia la materia y la energía',0,'Eso corresponde a la física y la química. La biología se enfoca en la vida.']]},
+{c:'c1',p:'Usando las raíces de la lectura, ¿qué estudiaría la microbiología?',o:[
+ ['Los seres vivos tan pequeños que se necesita un microscopio para verlos',1,'Correcto: micro (pequeño) + bíos (vida) + lógos (estudio). Estudia bacterias y otros organismos microscópicos.'],
+ ['Los animales pequeños que viven en el suelo, como las hormigas y las lombrices',0,'Las hormigas se ven a simple vista. «Micro» se refiere a seres tan diminutos que solo se ven con microscopio.'],
+ ['Las rocas y minerales pequeños',0,'Las rocas no son seres vivos: a la palabra le falta sentido sin bíos (vida).'],
+ ['Los instrumentos para observar',0,'Eso se relaciona con skopein (observar), como en microscopio, no con bíos.']]},
+{c:'c2',p:'¿En qué rama de la biología se especializa Lucía?',o:[
+ ['Botánica',1,'Correcto: la botánica estudia las plantas, su crecimiento, su clasificación y procesos como la fotosíntesis.'],
+ ['Zoología',0,'La zoología estudia a los animales, y Lucía estudia plantas.'],
+ ['Ecología',0,'La ecología estudia las relaciones entre seres vivos y su ambiente; Lucía se enfoca en las plantas mismas.'],
+ ['Genética',0,'La genética estudia la herencia, y el texto no menciona que Lucía la estudie.']]},
+{c:'c2',p:'¿En qué rama se especializa Raúl?',o:[
+ ['Microbiología',1,'Correcto: identifica bacterias y otros organismos diminutos con el microscopio.'],
+ ['Citología',0,'La citología estudia la estructura de las células de cualquier ser vivo. Raúl identifica organismos microscópicos completos: eso es microbiología.'],
+ ['Micología',0,'La micología estudia los hongos, y Raúl busca bacterias.'],
+ ['Botánica',0,'La botánica estudia las plantas, no los organismos microscópicos del agua.']]},
+{c:'c2',p:'¿En qué rama se especializa Sofía?',o:[
+ ['Ecología',1,'Correcto: estudia cómo se relacionan los seres vivos entre sí y con su ambiente, como el agua contaminada.'],
+ ['Zoología',0,'Sofía sí estudia peces y aves, pero lo central de su trabajo son las relaciones entre ellos, los mangles y el ambiente.'],
+ ['Fisiología',0,'La fisiología estudia cómo funciona el cuerpo de un ser vivo, no las relaciones entre especies.'],
+ ['Botánica',0,'Sofía no se enfoca solo en las plantas, sino en las relaciones entre todos.']]},
+{c:'c2',p:'¿En qué rama se especializa Diego?',o:[
+ ['Genética',1,'Correcto: la genética estudia cómo se heredan las características, y el ADN es la clave de la herencia.'],
+ ['Paleontología',0,'La paleontología estudia los fósiles de seres que vivieron hace mucho tiempo.'],
+ ['Anatomía',0,'La anatomía estudia la estructura del cuerpo, no la herencia.'],
+ ['Ecología',0,'La ecología estudia relaciones con el ambiente, no la herencia de padres a hijos.']]},
+{c:'c2',p:'El trabajo de Marta combina dos ramas. ¿Cuáles son?',o:[
+ ['Anatomía (cómo están formados) y fisiología (cómo funcionan)',1,'Correcto: la anatomía estudia la estructura de huesos, músculos y órganos, y la fisiología, su funcionamiento.'],
+ ['Zoología (los animales) y genética (cómo se heredan sus características)',0,'Marta sí estudia un animal, pero no estudia la herencia, que es el tema de la genética.'],
+ ['Botánica y ecología',0,'Marta estudia garzas, no plantas, ni las relaciones con el ambiente.'],
+ ['Microbiología y citología',0,'Marta no trabaja con organismos microscópicos ni con células, sino con huesos, músculos y órganos.']]},
+{c:'c3',p:'¿Qué frase de la lectura es un ejemplo de irritabilidad?',o:[
+ ['«Detecta las vibraciones del agua y se esconde en el fondo»',1,'Correcto: hay un estímulo (la vibración) y una respuesta (esconderse). Eso es irritabilidad.'],
+ ['«Se alimenta de gusanos, larvas de insectos y acociles»',0,'Esa frase describe la nutrición.'],
+ ['«Nace de un huevo y puede llegar a medir más de 20 centímetros»',0,'Esa frase describe el crecimiento.'],
+ ['«Las hembras ponen cientos de huevos»',0,'Esa frase describe la reproducción.']]},
+{c:'c3',p:'Por la forma en que se alimenta, el ajolote es:',o:[
+ ['Heterótrofo',1,'Correcto: obtiene su alimento comiendo a otros seres vivos.'],
+ ['Autótrofo',0,'Los autótrofos, como las plantas, fabrican su alimento con la luz del Sol. El ajolote no puede hacerlo.'],
+ ['Productor',0,'Los productores fabrican su alimento (son autótrofos). El ajolote caza a otros animales.'],
+ ['Descomponedor',0,'Los descomponedores, como hongos y bacterias, se alimentan de restos de seres muertos. El ajolote caza animales vivos.']]},
+{c:'c3',p:'El final de la lectura dice que la especie «se adaptó» al agua fría a lo largo de muchas generaciones. ¿Qué característica de los seres vivos describe?',o:[
+ ['Adaptación',1,'Correcto: la adaptación ocurre en la especie, a lo largo de muchas generaciones, no en un solo individuo.'],
+ ['Irritabilidad',0,'La irritabilidad es la respuesta inmediata de un individuo a un estímulo, no un cambio de la especie a lo largo de generaciones.'],
+ ['Crecimiento',0,'El crecimiento ocurre en un individuo durante su vida, no en la especie.'],
+ ['Nutrición',0,'La nutrición es cómo obtiene materia y energía; el texto habla de un cambio de la especie.']]},
+{c:'c4',p:'¿Por qué el fuego NO es un ser vivo, aunque consume oxígeno y crece?',o:[
+ ['Porque no está formado por células ni tiene información genética',1,'Correcto: puede parecer que respira y crece, pero sin células no hay vida.'],
+ ['Porque en realidad no consume oxígeno, aunque parezca que lo usa para arder',0,'Sí consume oxígeno; la lectura lo dice. Por eso es un caso que engaña.'],
+ ['Porque no puede crecer',0,'Sí se agranda si tiene combustible. El problema es que no crece desde adentro ni tiene células.'],
+ ['Porque es muy caliente',0,'La temperatura no define la vida: hay bacterias que viven en aguas termales muy calientes.']]},
+{c:'c4',p:'¿La mula es un ser vivo?',o:[
+ ['Sí: está formada por células y realiza nutrición, respiración, crecimiento e irritabilidad',1,'Correcto: no poder reproducirse no la convierte en un ser no vivo.'],
+ ['No, porque un ser vivo debe cumplir todas las características y la mula no puede reproducirse',0,'La reproducción garantiza que una especie continúe, pero un individuo puede estar vivo sin reproducirse, como una persona que no tiene hijos.'],
+ ['Es un caso frontera, como el virus',0,'El virus no tiene células; la mula sí, y realiza todas sus funciones vitales.'],
+ ['Solo está viva mientras come',0,'Un ser vivo no deja de estarlo entre comidas: sus células siguen funcionando todo el tiempo.']]},
+{c:'c4',p:'La semilla guardada lleva un año sin cambios. ¿Cuál es la explicación correcta?',o:[
+ ['Está viva en pausa: sus células funcionan al mínimo hasta que haya condiciones para germinar',1,'Correcto: a esto se le llama latencia.'],
+ ['Está muerta, pero cuando recibe agua vuelve a la vida y entonces germina',0,'Lo que está muerto no revive. Si germina es porque sus células siempre estuvieron vivas.'],
+ ['No está viva, porque un ser vivo siempre crece y cambia, y la semilla no ha cambiado en un año',0,'Sí respira, solo que muy, muy lento.'],
+ ['Es un objeto no vivo, como un cristal',0,'A diferencia del cristal, la semilla tiene un embrión formado por células vivas.']]},
+{c:'c4',p:'¿Por qué muchos científicos consideran que el virus NO está vivo?',o:[
+ ['Porque no tiene células ni metabolismo propio: solo se multiplica dentro de una célula viva',1,'Correcto. Aun así, como tiene material genético y evoluciona, otros lo consideran un caso frontera.'],
+ ['Porque es tan pequeño que solo puede verse con un microscopio electrónico',0,'El tamaño no define la vida: las bacterias también son microscópicas y están vivas.'],
+ ['Porque no cambia con el tiempo: siempre es el mismo virus desde que apareció',0,'Al contrario: el virus sí evoluciona; por eso cada año se actualiza la vacuna.'],
+ ['Porque causa enfermedades',0,'Muchas bacterias y hongos causan enfermedades y sí están vivos.']]},
+{c:'c4',p:'Comparando los cuatro casos, ¿qué característica permite decidir con más seguridad si algo está vivo?',o:[
+ ['Estar formado por células',1,'Correcto: según la teoría celular, todos los seres vivos están formados por una o más células. El fuego y el virus no las tienen; la mula y la semilla sí.'],
+ ['Consumir oxígeno',0,'El fuego consume oxígeno y no está vivo. Además, algunos seres vivos viven sin oxígeno.'],
+ ['Poder reproducirse',0,'La mula no se reproduce y está viva. Esta característica no basta para decidir.'],
+ ['Crecer',0,'El fuego y los cristales también crecen, y no están vivos.']]},
+{c:'c4',p:'Un compañero dice: «Las plantas no respiran porque no tienen pulmones». ¿Qué le responderías?',o:[
+ ['Que sí respiran: la respiración celular ocurre en las células, aunque no haya pulmones',1,'Correcto: todos los seres vivos hacen respiración celular para liberar energía. Los pulmones solo sirven para meter y sacar aire en algunos animales.'],
+ ['Que tiene razón: las plantas no respiran, solo hacen fotosíntesis para fabricar su alimento',0,'La fotosíntesis fabrica el alimento; la respiración libera su energía. Las plantas hacen las dos.'],
+ ['Que las plantas solo respiran de noche',0,'Respiran todo el tiempo. De día, además, hacen fotosíntesis y producen más oxígeno del que usan.'],
+ ['Que respiran por las raíces porque ahí tienen pulmones',0,'Las plantas no tienen pulmones en ninguna parte; la respiración ocurre dentro de cada célula.']]},
+{c:'c5',p:'¿Cuál es el productor de esta red trófica?',o:[
+ ['El pasto navajita y las otras hierbas',1,'Correcto: fabrican su alimento con la luz del Sol. Por ellos entra la energía a la red.'],
+ ['El perrito de la pradera',0,'El perrito no fabrica su alimento: come pasto, así que es consumidor.'],
+ ['Los hongos y las bacterias',0,'Son descomponedores: se alimentan de restos de seres muertos.'],
+ ['El bisonte',0,'El bisonte come pasto: es consumidor primario.']]},
+{c:'c5',p:'¿Qué nivel trófico ocupa el perrito de la pradera?',o:[
+ ['Consumidor primario',1,'Correcto: come productores (pasto y hierbas).'],
+ ['Productor',0,'No fabrica su alimento: lo obtiene comiendo pasto.'],
+ ['Consumidor secundario',0,'Sería secundario si comiera a otros consumidores, pero el perrito come pasto.'],
+ ['Superdepredador',0,'Al contrario: muchos animales lo cazan.']]},
+{c:'c5',p:'La serpiente toro come perritos de la pradera. ¿Qué nivel trófico ocupa?',o:[
+ ['Consumidor secundario',1,'Correcto: se alimenta de un consumidor primario.'],
+ ['Consumidor primario',0,'Los consumidores primarios comen productores; la serpiente come perritos, que son consumidores.'],
+ ['Productor',0,'La serpiente no fabrica su alimento.'],
+ ['Superdepredador',0,'No está en la cima: el águila real la caza.']]},
+{c:'c5',p:'¿Por qué el águila real es un superdepredador?',o:[
+ ['Porque está en la cima: caza a otros consumidores y ningún animal la caza de adulta',1,'Correcto: lo que define su nivel es qué come y quién se la come.'],
+ ['Porque es el animal más grande y fuerte de todo el pastizal',0,'El bisonte es más grande y es consumidor primario. El nivel trófico no depende del tamaño.'],
+ ['Porque puede volar',0,'Volar no define el nivel trófico: el tecolote también vuela y es consumidor secundario.'],
+ ['Porque come tanto pasto como animales y por eso tiene más energía que los demás',0,'El águila real no come pasto: es carnívora.']]},
+{c:'c5',p:'En la tabla, ¿qué significa la flecha «Perrito de la pradera → Hurón»?',o:[
+ ['Que la energía pasa del perrito al hurón, porque el hurón se lo come',1,'Correcto: las flechas de una red trófica muestran hacia dónde va la energía.'],
+ ['Que el perrito se come al hurón, porque la flecha sale del que come hacia su alimento',0,'Es un error muy común. La flecha apunta hacia quien come, porque muestra hacia dónde va la energía.'],
+ ['Que el perrito y el hurón compiten por el mismo alimento',0,'La flecha no indica competencia, sino quién se come a quién.'],
+ ['Que el hurón protege al perrito',0,'La flecha indica alimentación: el hurón se come al perrito.']]},
+{c:'c5',p:'Si una enfermedad acabara con casi todos los perritos de la pradera, ¿qué le pasaría al hurón de patas negras?',o:[
+ ['Disminuiría mucho, porque depende casi solo de los perritos',1,'Correcto: si desaparece casi todo su alimento, la población del hurón cae.'],
+ ['Aumentaría, porque ya no tendría que compartir su alimento con la serpiente y el coyote',0,'Sin perritos, el hurón se queda sin su principal alimento. La lectura dice que come casi solo perritos.'],
+ ['No le pasaría nada, porque puede comer pasto',0,'El hurón es carnívoro: no puede alimentarse de pasto.'],
+ ['Se convertiría en productor',0,'Un animal no puede volverse productor: no hace fotosíntesis.']]},
+{c:'c5',p:'Si los cazadores eliminaran a los coyotes y a las águilas reales, ¿qué efecto en cadena es más probable?',o:[
+ ['Aumentarían los perritos de la pradera y, con ellos, disminuiría el pasto',1,'Correcto: sin depredadores, la presa aumenta y consume más productores. Se llama cascada trófica.'],
+ ['Disminuirían los perritos de la pradera, porque el pasto ya no les alcanzaría',0,'Pasaría lo contrario: con menos depredadores, sobreviven más perritos.'],
+ ['Aumentaría el pasto',0,'Al revés: con más perritos comiendo, el pasto disminuye.'],
+ ['No pasaría nada, porque esos animales están lejos del pasto',0,'En una red trófica todo está conectado: un cambio arriba llega hasta los productores.']]},
+{c:'c5',p:'¿Por qué decimos que esto es una red trófica y no una cadena alimentaria?',o:[
+ ['Porque muchas cadenas se cruzan: varios animales comen lo mismo y algunos comen a varios',1,'Correcto: una red está formada por muchas cadenas conectadas entre sí.'],
+ ['Porque tiene más especies que una cadena, aunque cada una coma solo una cosa',0,'Lo que la vuelve red no es el número de especies, sino que las cadenas se conectan: varios comen lo mismo y algunos comen a varios.'],
+ ['Porque solo tiene un tipo de productor',0,'Una cadena también puede tener un solo productor. Lo que la vuelve red es que las cadenas se conectan.'],
+ ['Porque incluye a los descomponedores, que reciclan la materia de todos los niveles',0,'Los descomponedores pueden aparecer en cadenas y en redes; no es lo que las distingue.']]},
+{c:'c5',p:'¿Qué papel tienen los hongos y las bacterias que menciona la lectura?',o:[
+ ['Son descomponedores: transforman los restos en nutrientes que vuelven al suelo y usan las plantas',1,'Correcto: cierran el ciclo de la materia en el ecosistema.'],
+ ['Son productores, porque viven en el suelo junto a las raíces de las plantas',0,'Vivir en el suelo no los hace productores: no fabrican su alimento con la luz del Sol.'],
+ ['Son superdepredadores porque al final se comen a todos',0,'No cazan: se alimentan de restos de seres que ya murieron.'],
+ ['No forman parte de la red, porque no comen a ningún ser vivo ni nadie se los come',0,'Sí forman parte, y son indispensables: sin ellos los nutrientes no regresarían al suelo.']]},
+{c:'c6',p:'Aproximadamente, ¿cuántas unidades de energía pasan del pasto a los perritos de la pradera?',o:[
+ ['1,000',1,'Correcto: el 10% de 10,000 es 1,000.'],
+ ['10,000',0,'Esa es toda la energía del pasto. Solo pasa alrededor del 10%.'],
+ ['100',0,'Esa sería la energía que llega al siguiente nivel, el hurón.'],
+ ['9,000',0,'Esa es la energía que se usa para vivir o se pierde como calor, no la que pasa a los perritos.']]},
+{c:'c6',p:'¿Y cuántas llegan aproximadamente al hurón que come perritos?',o:[
+ ['100',1,'Correcto: el 10% de 1,000 es 100. De las 10,000 iniciales, al hurón solo le llega el 1%.'],
+ ['1,000',0,'Esa es la energía de los perritos. Al pasar al hurón se vuelve a perder cerca del 90%.'],
+ ['10',0,'Esa sería la energía en el siguiente nivel después del hurón.'],
+ ['500',0,'No es la mitad: en cada paso solo pasa alrededor del 10%.']]},
+{c:'c6',p:'Según la lectura, ¿por qué en un ecosistema hay muchos menos superdepredadores que herbívoros?',o:[
+ ['Porque en cada nivel se pierde gran parte de la energía, y arriba queda muy poca para mantener animales',1,'Correcto: por eso las redes tróficas tienen pocos niveles y pocos animales en la cima.'],
+ ['Porque los cazadores los eliminan, y sin ellos habría tantos depredadores como herbívoros',0,'La caza puede afectarlos, pero incluso en lugares sin cazadores hay muchos menos depredadores que herbívoros.'],
+ ['Porque los superdepredadores necesitan muy poca energía y por eso basta con unos cuantos',0,'Al contrario: suelen ser animales grandes y activos que necesitan mucha energía.'],
+ ['Porque los herbívoros se comen a los superdepredadores',0,'Los herbívoros comen plantas, no animales.']]}
+];
+PREG.forEach(q=>q.tema=CASOS[q.c].tema);
+if(typeof module!=='undefined')module.exports={TEMAS,CASOS,PREG};
+
+</script>
+<script>
+(function(){
+'use strict';
+/* ====== CONFIGURACIÓN DEL DOCENTE ======
+   URL /exec del registro único de los juegos (pestaña «Evaluacion»).
+   Panel oculto: agrega ?docente al final de la dirección (cambiar URL o reiniciar este equipo). */
+const CONFIG={urlAppsScript:'https://script.google.com/macros/s/AKfycbygRk9A6WzIUDJGxFjJY659rdNhNQchklDIGif_iAygyiV6eDChynsv8Lxs-2tE_TMahg/exec'};
+
+const $=s=>document.querySelector(s),$$=s=>Array.from(document.querySelectorAll(s));
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const ls={get(k,d){try{const v=localStorage.getItem(k);return v==null?d:JSON.parse(v)}catch(e){return d}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}},del(k){try{localStorage.removeItem(k)}catch(e){}}};
+const reduce=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+const mmss=s=>Math.floor(s/60)+':'+String(s%60).padStart(2,'0');
+const LETRAS='ABCD';
+const barajar=a=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a};
+
+const NUEVO=()=>({j:null,i:0,orden:PREG.map(q=>barajar(q.o.map((_,k)=>k))),resp:{},seg:0,fin:false,enviado:false});
+let E=ls.get('eval-estado',null);
+if(!E||!E.orden||E.orden.length!==PREG.length)E=NUEVO();
+const guardar=()=>ls.set('eval-estado',E);
+let reloj=null;
+function correr(){clearInterval(reloj);reloj=setInterval(()=>{if(document.hidden||E.fin)return;E.seg++;if(E.seg%5===0)guardar()},1000)}
+function mostrar(id){$$('.pantalla').forEach(p=>p.classList.toggle('activa',p.id===id));window.scrollTo(0,0)}
+function modal(h){$('#modal-doc').innerHTML=h+'<div style="margin-top:12px"><button class="btn sec" data-cerrar>Cerrar</button></div>';$('#modal').classList.add('abierto')}
+document.addEventListener('click',e=>{if(e.target.closest('[data-cerrar]')||e.target.id==='modal')$('#modal').classList.remove('abierto')});
+const correcta=i=>PREG[i].o.findIndex(o=>o[1]);
+const aciertos=()=>Object.keys(E.resp).filter(i=>E.resp[i]===correcta(+i)).length;
+
+/* ---------- Inicio ---------- */
+(function(){const j=ls.get('eval-jugador',null);if(j){$('#i-nombre').value=j.nombre||'';$('#i-sec').value=j.secundaria||'';if(j.grado)$('#i-grado').value=j.grado;if(j.letra)$('#i-letra').value=j.letra}
+  if(E.j)$('#b-continuar').classList.remove('oculto')})();
+$('#b-empezar').addEventListener('click',()=>{
+  if(E.j&&E.fin){$('#msg-ini').textContent='En este equipo ya se terminó una evaluación. Usa «Continuar» para ver el resultado; tu profesor puede habilitar una nueva.';return}
+  if(E.j&&Object.keys(E.resp).length){$('#msg-ini').textContent='Ya tienes una evaluación en curso en este equipo: usa «Continuar mi evaluación».';return}
+  const nombre=$('#i-nombre').value.trim(),sec=$('#i-sec').value.trim();
+  if(nombre.length<2){$('#msg-ini').textContent='Escribe tu nombre.';return}
+  if(sec.length<3){$('#msg-ini').textContent='Escribe el nombre de tu secundaria.';return}
+  const j={nombre,secundaria:sec,grado:$('#i-grado').value,letra:$('#i-letra').value};ls.set('eval-jugador',j);
+  E=NUEVO();E.j=j;guardar();evaluar();
+});
+$('#b-continuar').addEventListener('click',()=>{E.fin?final():evaluar()});
+
+/* ---------- Preguntas ---------- */
+function evaluar(){correr();mostrar('p-eval');pintar()}
+function pintar(){
+  const i=E.i,q=PREG[i],C=CASOS[q.c],resp=E.resp[i],ok=correcta(i);
+  const primera=i===0||PREG[i-1].c!==q.c;
+  const enCaso=PREG.filter(x=>x.c===q.c),nEnCaso=enCaso.indexOf(q)+1;
+  $('#b-num').textContent=`${i+1} / ${PREG.length}`;$('#b-prog').style.width=(Object.keys(E.resp).length/PREG.length*100)+'%';$('#b-ok').textContent='✔ '+aciertos();
+  let h=`<div class="caso-cab"><span class="e" aria-hidden="true">${C.e}</span><div><span class="muted">Caso ${Object.keys(CASOS).indexOf(q.c)+1} · pregunta ${nEnCaso} de ${enCaso.length}</span><h2 style="margin:0">${esc(C.t)}</h2></div></div>
+   <details class="lectura" ${primera&&resp===undefined?'open':''}><summary>📖 ${primera&&resp===undefined?'Lectura del caso':'Volver a leer el caso'}</summary>${C.lectura}</details>
+   <span class="tema">${TEMAS[q.tema]}</span><p class="preg">${i+1}. ${esc(q.p)}</p>`;
+  h+=E.orden[i].map((k,pos)=>{const o=q.o[k];let cls='',extra='';
+    if(resp!==undefined){if(k===ok){cls=' correcta';extra=`<span class="expl"><span class="marca">✔ Respuesta correcta.</span> ${esc(o[2])}</span>`}
+      else if(k===resp){cls=' incorrecta';extra=`<span class="expl"><span class="marca">✘ Por qué no:</span> ${esc(o[2])}</span>`}}
+    return `<button class="op${cls}" data-k="${k}" ${resp!==undefined?'disabled':''}><span class="letra">${LETRAS[pos]}</span><span>${esc(o[0])}${extra}</span></button>`}).join('');
+  if(resp!==undefined){
+    h+=`<div class="veredicto ${resp===ok?'ok':'no'}">${resp===ok?'✔ ¡Correcto!':'✘ Incorrecto. Lee la explicación de tu respuesta y de la correcta.'}</div>`;
+    h+=`<button class="btn ancho" id="b-sig">${i<PREG.length-1?(PREG[i+1].c!==q.c?'Siguiente caso':'Siguiente pregunta'):'Ver mi resultado'}</button>`;
+  }
+  $('#pregunta').innerHTML=h;
+}
+$('#pregunta').addEventListener('click',e=>{
+  const b=e.target.closest('.op');
+  if(b&&!b.disabled&&E.resp[E.i]===undefined){
+    if(b.getAttribute('aria-pressed')!=='true'){$$('.op').forEach(x=>x.setAttribute('aria-pressed',x===b));
+      const btn=$('#b-confirmar')||document.createElement('button');btn.id='b-confirmar';btn.className='btn ancho';btn.textContent='Confirmar respuesta '+b.querySelector('.letra').textContent;
+      if(!btn.parentNode){const v=$$('.op');v[v.length-1].after(btn)}
+      btn.scrollIntoView({behavior:reduce?'auto':'smooth',block:'nearest'});return}
+  }
+  if(e.target.closest('#b-confirmar')){const sel=$('.op[aria-pressed=true]');if(!sel)return;E.resp[E.i]=+sel.dataset.k;guardar();pintar();
+    const v=$('.veredicto');if(v)v.scrollIntoView({behavior:reduce?'auto':'smooth',block:'center'});return}
+  if(e.target.closest('#b-sig')){if(E.i<PREG.length-1){E.i++;guardar();pintar();window.scrollTo(0,0)}else{E.fin=true;guardar();final()}}
+});
+
+/* ---------- Final ---------- */
+function porTema(){const t={};Object.keys(TEMAS).forEach(k=>t[k]={ok:0,n:0});PREG.forEach((q,i)=>{t[q.tema].n++;if(E.resp[i]===correcta(i))t[q.tema].ok++});return t}
+const calificacion=()=>Math.round(aciertos()/PREG.length*100)/10;
+function final(){
+  clearInterval(reloj);mostrar('p-final');
+  const c=calificacion(),t=porTema();
+  $('#f-datos').innerHTML=`${esc(E.j.nombre)} · ${esc(E.j.secundaria)} · ${esc(E.j.grado)} ${esc(E.j.letra)} · ${new Date().toLocaleDateString('es-MX')}`;
+  $('#f-calif').textContent=c.toFixed(1);
+  $('#f-aciertos').textContent=`${aciertos()} de ${PREG.length} respuestas correctas · tiempo: ${mmss(E.seg)}`;
+  $('#f-temas').innerHTML=Object.keys(TEMAS).map(k=>{const p=t[k].n?t[k].ok/t[k].n:0,col=p>=.8?'#2f8f4e':p>=.6?'#c98a00':'#c3241c';
+    return `<div class="t"><div style="display:flex;justify-content:space-between;gap:8px"><span>${TEMAS[k]}</span><b>${t[k].ok} de ${t[k].n}</b></div><div class="barra-t"><i style="width:${p*100}%;background:${col}"></i></div></div>`}).join('');
+  const debil=Object.keys(TEMAS).filter(k=>t[k].n&&t[k].ok/t[k].n<.6);
+  $('#f-consejo').innerHTML=debil.length?`💡 Te conviene repasar: <b>${debil.map(k=>TEMAS[k].toLowerCase()).join(', ')}</b>.`:'💡 ¡Buen dominio de todos los temas!';
+  const mal=PREG.map((q,i)=>i).filter(i=>E.resp[i]!==correcta(i));
+  $('#f-repaso').innerHTML=mal.length?mal.map(i=>{const q=PREG[i],r=q.o[E.resp[i]],o=q.o[correcta(i)];
+    return `<div class="repaso"><b>${i+1}. ${esc(q.p)}</b><br>Tu respuesta: ${r?esc(r[0]):'—'}<br><b>Correcta:</b> ${esc(o[0])}<br><span class="muted">${esc(o[2])}</span></div>`}).join('')
+    :'<p>¡No tuviste errores! 🎉</p>';
+  const url=urlRegistro();$('#b-enviar').disabled=!url||E.enviado;
+  $('#msg-env').className='msg';$('#msg-env').textContent=!url?'El envío al profesor no está activado.':E.enviado?'Tu evaluación ya fue enviada.':'';
+}
+function urlRegistro(){const u=ls.get('eval-url','')||CONFIG.urlAppsScript||'';return u.indexOf('__URL__')>=0?'':u}
+$('#b-enviar').addEventListener('click',async()=>{
+  const url=urlRegistro();if(!url||E.enviado)return;const b=$('#b-enviar');b.disabled=true;$('#msg-env').textContent='Enviando…';
+  const t=porTema();
+  const body=JSON.stringify({juego:'eval',nombre:E.j.nombre,secundaria:E.j.secundaria,grupo:E.j.grado+' '+E.j.letra,
+    calificacion:calificacion(),aciertos:aciertos(),total:PREG.length,tiempo:E.seg,
+    concepto:t.concepto.ok,ramas:t.ramas.ok,caracteristicas:t.caracteristicas.ok,redes:t.redes.ok,
+    detalle:PREG.map((q,i)=>E.resp[i]===correcta(i)?'1':'0').join(''),
+    fallas:PREG.map((q,i)=>i).filter(i=>E.resp[i]!==correcta(i)).map(i=>i+1).join(', ')});
+  try{const r=await fetch(url,{method:'POST',body});const j=await r.json();if(!j.ok)throw 0;E.enviado=true;guardar();$('#msg-env').className='msg bien';$('#msg-env').textContent='Enviada a tu profesor.'}
+  catch(e){try{await fetch(url,{method:'POST',body,mode:'no-cors'});E.enviado=true;guardar();$('#msg-env').className='msg';$('#msg-env').textContent='Enviada. Si tu profesor no la ve, avísale.'}
+    catch(e2){b.disabled=false;$('#msg-env').className='msg mal';$('#msg-env').textContent='No se pudo enviar. Revisa tu conexión.'}}
+});
+$('#b-imprimir').addEventListener('click',()=>window.print());
+
+/* ---------- Panel docente oculto ---------- */
+if(new URLSearchParams(location.search).has('docente')){
+  modal(`<h3>Configuración del docente</h3><label class="campo">URL /exec de Apps Script (solo este navegador)<input id="cfg-url" value="${esc(urlRegistro())}"></label>
+   <div class="fila"><button class="btn" id="cfg-guardar">Guardar</button><button class="btn sec" id="cfg-borrar">Reiniciar la evaluación en este equipo</button></div><p class="msg" id="cfg-msg"></p>`);
+  document.addEventListener('click',e=>{
+    if(e.target.id==='cfg-guardar'){const u=$('#cfg-url').value.trim();u?ls.set('eval-url',u):ls.del('eval-url');$('#cfg-msg').textContent='Guardado.'}
+    if(e.target.id==='cfg-borrar'){ls.del('eval-estado');E=NUEVO();$('#b-continuar').classList.add('oculto');mostrar('p-inicio');$('#cfg-msg').textContent='Listo: este equipo puede empezar una evaluación nueva.'}});
+}
+})();
+</script>
+</body>
+</html>
